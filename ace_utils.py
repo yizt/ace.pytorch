@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 """
- @File    : loss.py
+ @File    : ace_utils.py
  @Time    : 2020/7/2 上午10:35
  @Author  : yizuotian
  @Description    :
 """
+import numpy as np
 import torch
 
 
@@ -30,3 +31,19 @@ def aggregate_cross_entropy(logits, class_ids):
     loss = (-torch.sum(torch.log(x) * class_ids)) / b
 
     return loss
+
+
+def decode_batch(x, alpha=None):
+    """
+
+    :param x: B,H,W,C
+    :param alpha:
+    :return:
+    """
+    _, indices = torch.max(x, dim=-1)  # [B,H,W]
+    class_ids = indices.data.cpu().numpy()  # [B,H,W]
+
+    if alpha:
+        return np.vectorize(lambda i: alpha[i])(class_ids)
+
+    return class_ids
