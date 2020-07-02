@@ -47,3 +47,17 @@ def decode_batch(x, alpha=None):
         return np.vectorize(lambda i: alpha[i])(class_ids)
 
     return class_ids
+
+
+def decode_accuracy(x, class_ids):
+    """
+    类别分布方式计算精度
+    :param x: [B,H,W,C]
+    :param class_ids: [B,C]
+    :return acc: [B] batch中每一个是否正确
+    """
+    max_val, _ = torch.max(x, dim=-1, keepdim=True)  # [B,H,W,1]
+    predict_cls_ids = torch.sum(torch.sum(max_val == x, dim=1), dim=1)  # [B,C]
+    acc = torch.prod(class_ids == predict_cls_ids, dim=1)  # [B]
+    acc = acc.cpu().numpy()
+    return acc
