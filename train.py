@@ -129,7 +129,7 @@ def train(args):
         eval_data_set = torch.utils.data.distributed.DistributedSampler(eval_data_set)
     else:
         train_sampler = torch.utils.data.RandomSampler(data_set)
-        eval_data_set = torch.utils.data.distributed.DistributedSampler(eval_data_set)
+        eval_data_set = torch.utils.data.RandomSampler(eval_data_set)
     data_loader = DataLoader(data_set, batch_size=args.batch_size, sampler=train_sampler,
                              num_workers=args.workers)
     eval_data_loader = DataLoader(eval_data_set, batch_size=args.batch_size, sampler=train_sampler,
@@ -197,7 +197,7 @@ if __name__ == '__main__':
     parser.add_argument('-i', '--syn-root', type=str, default=None)
     parser.add_argument('--alpha', type=str, default=' ' + string.digits + string.ascii_lowercase)
     parser.add_argument('--height', type=int, default=32, help="training image's height")
-    parser.add_argument('--width', type=int, default=100, help="training image's width")
+    parser.add_argument('--width', type=int, default=200, help="training image's width")
     parser.add_argument("--device", type=str, default='cpu', help="cpu or cuda")
     parser.add_argument("--batch-size", type=int, default=64, help="batch size")
     parser.add_argument("--epochs", type=int, default=50, help="epochs")
