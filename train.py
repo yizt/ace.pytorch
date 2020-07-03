@@ -126,13 +126,13 @@ def train(args):
                                    mode='val')
     if args.distributed:
         train_sampler = torch.utils.data.distributed.DistributedSampler(data_set)
-        eval_data_set = torch.utils.data.distributed.DistributedSampler(eval_data_set)
+        eval_sampler = torch.utils.data.distributed.DistributedSampler(eval_data_set)
     else:
         train_sampler = torch.utils.data.RandomSampler(data_set)
-        eval_data_set = torch.utils.data.RandomSampler(eval_data_set)
+        eval_sampler = torch.utils.data.RandomSampler(eval_data_set)
     data_loader = DataLoader(data_set, batch_size=args.batch_size, sampler=train_sampler,
                              num_workers=args.workers)
-    eval_data_loader = DataLoader(eval_data_set, batch_size=args.batch_size, sampler=train_sampler,
+    eval_data_loader = DataLoader(eval_data_set, batch_size=args.batch_size, sampler=eval_sampler,
                                   num_workers=args.workers)
     # model
     model = ResNetEncoderDecoder(len(args.alpha))
