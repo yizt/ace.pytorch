@@ -29,7 +29,7 @@ class EncoderDecoder(nn.Module):
         :return:
         """
         x = F.relu(self.bn(self.conv(x)), True)
-        x = F.max_pool2d(x, kernel_size=(2, 2), stride=(2, 2))
+        x = F.max_pool2d(x, kernel_size=(2, 1), stride=(2, 1))
         x = self.cnn(x)
 
         x = x.permute(0, 2, 3, 1)  # [B,C,H,W]=>[B,H,W,C]
@@ -53,5 +53,5 @@ class ResNetEncoderDecoder(EncoderDecoder):
 if __name__ == '__main__':
     import torchsummary
 
-    net = ResNetEncoderDecoder(100)
-    torchsummary.summary(net, input_size=(1, 300, 300))
+    net = ResNetEncoderDecoder(32)
+    torchsummary.summary(net, input_size=(1, 32, 200))
