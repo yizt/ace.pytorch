@@ -110,7 +110,7 @@ def train(args):
     torch.backends.cudnn.benchmark = True
     # data loader
     trans = transforms.Compose([
-        transforms.Resize((32, 100)),  # [h,w]
+        transforms.Resize((args.h, args.w)),  # [h,w]
         transforms.ToTensor(),
         transforms.Normalize([0.5], [0.5])
     ])
