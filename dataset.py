@@ -108,7 +108,7 @@ class Synth90Dataset(BaseDataset):
         image_path = self.get_img_path(index)  # eg:./3000/6/501_UNIVERSAL_82748.jpg
         image_name = os.path.basename(image_path)
         text = image_name.split('_')[1]
-        return text
+        return text.lower()
 
 
 if __name__ == '__main__':
