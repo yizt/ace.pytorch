@@ -12,6 +12,7 @@ import string
 import sys
 import time
 
+import numpy as np
 import torch
 from tensorboardX import SummaryWriter
 from torch import optim
@@ -20,9 +21,8 @@ from torchvision.transforms import transforms
 from tqdm import tqdm
 
 import utils
-from ace_utils import aggregate_cross_entropy
+from ace_utils import aggregate_cross_entropy, decode_accuracy
 from dataset import Synth90Dataset
-# from torch.utils.tensorboard import SummaryWriter
 from model import ResNetEncoderDecoder
 
 
@@ -83,6 +83,25 @@ def train_one_epoch(model, optimizer, data_loader, device, epoch, args):
     return epoch_loss
 
 
+def evaluate(model, data_loader, device, epoch, args):
+    model.eval()
+    acc_list = []
+    for sample in tqdm(data_loader):
+        image = sample['image'].to(device)
+        target = sample['target'].to(device)
+
+        outputs = model(image)  # [B,N,C]
+        acc = decode_accuracy(outputs, target)
+
+        # 当前轮的精度
+        acc_list.append(acc)
+    # 计算最终精度
+    acc_np = np.concatenate(acc_list)
+    accuracy = np.mean(acc_np)
+    print('Epoch: {}/{} acc: {:03f}'.format(epoch + 1, args.epochs, accuracy))
+    return accuracy
+
+
 def train(args):
     init_distributed_mode(args)
     print(args)
@@ -96,13 +115,25 @@ def train(args):
         transforms.Normalize([0.5], [0.5])
     ])
 
-    data_set = Synth90Dataset(args.syn_root, args.alpha, transforms=trans)
+    data_set = Synth90Dataset(args.syn_root,
+                              args.alpha,
+                              transforms=trans,
+                              target_transforms=transforms.Lambda(lambda x: torch.from_numpy(x)))
+    eval_data_set = Synth90Dataset(args.syn_root,
+                                   args.alpha,
+                                   transforms=trans,
+                                   target_transforms=transforms.Lambda(lambda x: torch.from_numpy(x)),
+                                   mode='val')
     if args.distributed:
         train_sampler = torch.utils.data.distributed.DistributedSampler(data_set)
+        eval_data_set = torch.utils.data.distributed.DistributedSampler(eval_data_set)
     else:
         train_sampler = torch.utils.data.RandomSampler(data_set)
+        eval_data_set = torch.utils.data.distributed.DistributedSampler(eval_data_set)
     data_loader = DataLoader(data_set, batch_size=args.batch_size, sampler=train_sampler,
                              num_workers=args.workers)
+    eval_data_loader = DataLoader(eval_data_set, batch_size=args.batch_size, sampler=train_sampler,
+                                  num_workers=args.workers)
     # model
     model = ResNetEncoderDecoder(100)
     model = model.to(device)
@@ -136,9 +167,12 @@ def train(args):
             train_sampler.set_epoch(epoch)
         # 训练
         loss = train_one_epoch(model, optimizer, data_loader, device, epoch, args)
+        # 评估
+        acc = evaluate(model, eval_data_loader, device, epoch, args)
         # 记录日志
         utils.add_scalar_on_master(writer, 'scalar/lr', optimizer.param_groups[0]['lr'], epoch + 1)
         utils.add_scalar_on_master(writer, 'scalar/train_loss', loss, epoch + 1)
+        utils.add_scalar_on_master(writer, 'scalar/accuracy', acc, epoch + 1)
         utils.add_weight_history_on_master(writer, model_without_ddp, epoch + 1)
         # 更新lr
         # lr_scheduler.step(epoch)
