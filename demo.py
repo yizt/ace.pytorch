@@ -8,7 +8,7 @@
 import argparse
 import os
 import sys
-
+import string
 import torch
 from PIL import Image
 from torchvision.transforms import transforms
@@ -59,6 +59,7 @@ if __name__ == '__main__':
     parse.add_argument("--weight-path", type=str, default=None, help="weight path")
     parse.add_argument("--image-dir", type=str, default=None, help="test image directory")
     parse.add_argument("--device", type=str, default='cpu', help="cpu or cuda")
+    parse.add_argument('--alpha', type=str, default=' ' + string.digits + string.ascii_lowercase)
 
     arguments = parse.parse_args(sys.argv[1:])
     main(arguments)
