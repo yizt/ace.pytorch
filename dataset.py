@@ -49,7 +49,7 @@ class BaseDataset(data.Dataset):
         :return target: [num_classes] 字符出现的次数
         :return gt: GT text
         """
-        im_path = self.get_gt_text(index)
+        im_path = self.get_img_path(index)
         img = Image.open(im_path)
         if self.transforms:
             img = self.transforms(img)
@@ -106,7 +106,8 @@ class Synth90Dataset(BaseDataset):
 
     def get_gt_text(self, index):
         image_path = self.get_img_path(index)  # eg:./3000/6/501_UNIVERSAL_82748.jpg
-        text = image_path.split('_')[1]
+        image_name = os.path.basename(image_path)
+        text = image_name.split('_')[1]
         return text
 
 
