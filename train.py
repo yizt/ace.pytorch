@@ -135,7 +135,7 @@ def train(args):
     eval_data_loader = DataLoader(eval_data_set, batch_size=args.batch_size, sampler=train_sampler,
                                   num_workers=args.workers)
     # model
-    model = ResNetEncoderDecoder(100)
+    model = ResNetEncoderDecoder(len(args.alpha))
     model = model.to(device)
 
     if args.distributed and args.sync_bn:
