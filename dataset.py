@@ -112,6 +112,9 @@ class Synth90Dataset(BaseDataset):
         text = image_name.split('_')[1]
         return text.lower()
 
+    def __len__(self):
+        return len(self.image_path_list)
+
 
 if __name__ == '__main__':
     import string
