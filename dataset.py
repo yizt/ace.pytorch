@@ -13,6 +13,9 @@ import sys
 import numpy as np
 import torch.utils.data as data
 from PIL import Image
+from PIL import ImageFile
+
+ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 
 class BaseDataset(data.Dataset):
@@ -50,7 +53,8 @@ class BaseDataset(data.Dataset):
         :return gt: GT text
         """
         im_path = self.get_img_path(index)
-        img = Image.open(im_path)
+        img = Image.open(im_path).convert('L')
+
         if self.transforms:
             img = self.transforms(img)
 
@@ -100,7 +104,8 @@ class Synth90Dataset(BaseDataset):
         for line in lines:
             img_path, _ = line.strip().split(' ')
             img_path = os.path.join(self.synth_root, img_path)
-            image_path_list.append(img_path)
+            if os.path.exists(img_path):
+                image_path_list.append(img_path)
         return image_path_list
 
     def get_img_path(self, index):
@@ -135,7 +140,7 @@ if __name__ == '__main__':
     syn = Synth90Dataset(args.syn_root,
                          args.alpha,
                          transforms=trans,
-                         target_transforms=transforms.Lambda(lambda x: torch.from_numpy(x)))
-
+                         target_transforms=transforms.Lambda(lambda x: torch.from_numpy(x)),
+                         mode='train')
     for i in range(10):
-        print(syn[i])
+        print(syn[i]['image'].size())
