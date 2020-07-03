@@ -66,6 +66,8 @@ class BaseDataset(data.Dataset):
         for idx in indices:
             label[int(idx)] += 1  # label construction for ACE
 
+        if self.target_transforms:
+            label = self.target_transforms(label)
         return {'image': img,
                 'target': label,
                 'gt': gt}
@@ -113,6 +115,7 @@ class Synth90Dataset(BaseDataset):
 
 if __name__ == '__main__':
     import string
+    import torch
     from torchvision.transforms import transforms
 
     parser = argparse.ArgumentParser()
@@ -126,7 +129,10 @@ if __name__ == '__main__':
         transforms.Normalize([0.5], [0.5])
     ])
 
-    syn = Synth90Dataset(args.syn_root, args.alpha, transforms=trans)
+    syn = Synth90Dataset(args.syn_root,
+                         args.alpha,
+                         transforms=trans,
+                         target_transforms=transforms.Lambda(lambda x: torch.from_numpy(x)))
 
     for i in range(10):
         print(syn[i])
