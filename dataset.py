@@ -121,6 +121,41 @@ class Synth90Dataset(BaseDataset):
         return len(self.image_path_list)
 
 
+class TowerSectionDataset(BaseDataset):
+    """
+    标准件数据加载
+    """
+
+    def __init__(self, tower_root, alpha=None, transforms=None,
+                 target_transforms=None, mode='train', **kwargs):
+        super(TowerSectionDataset, self).__init__(alpha=alpha,
+                                                  transforms=transforms,
+                                                  target_transforms=target_transforms,
+                                                  mode=mode,
+                                                  **kwargs)
+        self.tower_root = tower_root
+        self.image_path_list = self.get_image_path_list()
+
+    def get_image_path_list(self):
+        image_path_list = [os.path.join(self.tower_root, f) for f in os.listdir(self.tower_root)]
+        if self.mode == 'train':
+            np.random.shuffle(image_path_list)
+        return image_path_list
+
+    def get_img_path(self, index):
+        return self.image_path_list[index]
+
+    def get_gt_text(self, index):
+        image_path = self.get_img_path(index)  # eg: 6cdf3bcb0ae98996ba61c87727a5f508_000_EQ7 103 20 966.jpg
+        image_name = os.path.basename(image_path)
+        image_name = os.path.splitext(image_name)[0]
+        text = image_name.split('_')[-1]
+        return text
+
+    def __len__(self):
+        return len(self.image_path_list)
+
+
 if __name__ == '__main__':
     import string
     import torch
