@@ -16,16 +16,10 @@ from torchvision.transforms import transforms
 from ace_utils import decode_batch
 from model import ResNetEncoderDecoder
 
-trans = transforms.Compose([
-    # transforms.Resize((32, 100)),  # [h,w]
-    transforms.ToTensor(),
-    transforms.Normalize([0.5], [0.5])
-])
 
-
-def inference_image(net, alpha, image_path, device):
+def inference_image(net, alpha, image_path, transform, device):
     image = Image.open(image_path).convert('L')
-    image = trans(image)
+    image = transform(image)
     image = image.unsqueeze(0).to(device)  # 增加batch维
     x = net(image)
     label = decode_batch(x, alpha)
@@ -41,15 +35,20 @@ def main(args):
     net.to(device)
     net.eval()
     # load image
+    trans = transforms.Compose([
+        transforms.Resize((args.height, args.width)),  # [h,w]
+        transforms.ToTensor(),
+        transforms.Normalize([0.5], [0.5])
+    ])
     if args.image_dir:
         image_path_list = [os.path.join(args.image_dir, n) for n in os.listdir(args.image_dir)]
         image_path_list.sort()
         for image_path in image_path_list:
-            label = inference_image(net, args.alpha, image_path, device)
+            label = inference_image(net, args.alpha, image_path, trans, device)
             print("image_path:{},label:\n{} ".format(image_path, label))
 
     else:
-        label = inference_image(net, args.alpha, args.image_path, device)
+        label = inference_image(net, args.alpha, args.image_path, trans, device)
         print("image_path:{},label:\n{}".format(args.image_path, label))
 
 
@@ -60,6 +59,8 @@ if __name__ == '__main__':
     parse.add_argument("--image-dir", type=str, default=None, help="test image directory")
     parse.add_argument("--device", type=str, default='cpu', help="cpu or cuda")
     parse.add_argument('--alpha', type=str, default=' ' + string.digits + string.ascii_lowercase)
+    parse.add_argument('--height', type=int, default=32, help="training image's height")
+    parse.add_argument('--width', type=int, default=200, help="training image's width")
 
     arguments = parse.parse_args(sys.argv[1:])
     main(arguments)
