@@ -22,7 +22,7 @@ from tqdm import tqdm
 
 import utils
 from ace_utils import aggregate_cross_entropy, decode_accuracy
-from dataset import Synth90Dataset
+from dataset import Synth90Dataset, TowerSectionDataset
 from model import ResNetEncoderDecoder
 
 
@@ -115,15 +115,16 @@ def train(args):
         transforms.Normalize([0.5], [0.5])
     ])
 
-    data_set = Synth90Dataset(args.syn_root,
-                              args.alpha,
-                              transforms=trans,
-                              target_transforms=transforms.Lambda(lambda x: torch.from_numpy(x)))
-    eval_data_set = Synth90Dataset(args.syn_root,
+    data_set = TowerSectionDataset(args.syn_root,
                                    args.alpha,
                                    transforms=trans,
-                                   target_transforms=transforms.Lambda(lambda x: torch.from_numpy(x)),
-                                   mode='val')
+                                   target_transforms=transforms.Lambda(lambda x: torch.from_numpy(x)))
+    eval_dir = args.eval_dir if args.eval_dir else args.syn_root
+    eval_data_set = TowerSectionDataset(eval_dir,
+                                        args.alpha,
+                                        transforms=trans,
+                                        target_transforms=transforms.Lambda(lambda x: torch.from_numpy(x)),
+                                        mode='val')
     if args.distributed:
         train_sampler = torch.utils.data.distributed.DistributedSampler(data_set)
         eval_sampler = torch.utils.data.distributed.DistributedSampler(eval_data_set)
@@ -195,6 +196,7 @@ def train(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-i', '--syn-root', type=str, default=None)
+    parser.add_argument('--eval-dir', type=str, default=None)
     parser.add_argument('--alpha', type=str, default=' ' + string.digits + string.ascii_lowercase)
     parser.add_argument('--height', type=int, default=32, help="training image's height")
     parser.add_argument('--width', type=int, default=200, help="training image's width")
