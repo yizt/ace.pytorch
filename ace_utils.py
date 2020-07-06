@@ -58,6 +58,6 @@ def decode_accuracy(x, class_ids):
     """
     max_val, _ = torch.max(x, dim=-1, keepdim=True)  # [B,H,W,1]
     predict_cls_ids = torch.sum(torch.sum(max_val == x, dim=1), dim=1)  # [B,C]
-    acc = torch.prod(class_ids == predict_cls_ids, dim=1)  # [B]
+    acc = torch.prod(class_ids[:, 1:] == predict_cls_ids[:, 1:], dim=1)  # [B]  不算空白字符的
     acc = acc.cpu().numpy()
     return acc
