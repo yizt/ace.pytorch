@@ -26,7 +26,7 @@ trans = transforms.Compose([
 def inference_image(net, alpha, image_path, device):
     image = Image.open(image_path).convert('L')
     image = trans(image)
-    image = image.unsqueze(0).to(device)  # 增加batch维
+    image = image.unsqueeze(0).to(device)  # 增加batch维
     x = net(image)
     label = decode_batch(x, alpha)
     return label
@@ -36,7 +36,7 @@ def main(args):
     device = torch.device('cuda:{}'.format(args.local_rank)
                           if args.device == 'cuda' and torch.cuda.is_available() else 'cpu')
     # 加载模型
-    net = ResNetEncoderDecoder(args.alpha)
+    net = ResNetEncoderDecoder(len(args.alpha))
     net.load_state_dict(torch.load(args.weight_path, map_location='cpu')['model'])
     net.to(device)
     net.eval()
