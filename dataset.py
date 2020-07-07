@@ -156,6 +156,49 @@ class TowerSectionDataset(BaseDataset):
         return len(self.image_path_list)
 
 
+class YXSOcrDataset(BaseDataset):
+    def __init__(self, data_root, alpha=None, transforms=None,
+                 target_transforms=None, mode='train', **kwargs):
+        super(YXSOcrDataset, self).__init__(alpha=alpha,
+                                            transforms=transforms,
+                                            target_transforms=target_transforms,
+                                            mode=mode,
+                                            **kwargs)
+        self.data_root = data_root
+        self.image_path_list, self.gt_list = self.get_image_path_list()
+
+    def get_image_path_list(self):
+        """
+        标注文件格式如下：
+        filename,label
+        0.jpg,去岸没谨峰福
+        1.jpg,蜕缩蝠缎掐助崔
+        2.jpg,木林焙袒舰酝凶厚
+        :return:
+        """
+        annotation_path = os.path.join(self.data_root, 'train.csv')
+        with codecs.open(annotation_path, mode='r', encoding='utf-8') as f:
+            lines = f.readlines()
+        image_path_list = []
+        gt_list = []
+        image_dir = os.path.join(self.data_root, self.mode)
+        for line in lines[1:]:  # 去除标题行
+            img_name, text = line.strip().split(',')
+            img_path = os.path.join(image_dir, img_name)
+            image_path_list.append(img_path)
+            gt_list.append(text)
+        return image_path_list
+
+    def get_img_path(self, index):
+        return self.image_path_list[index]
+
+    def get_gt_text(self, index):
+        return self.gt_list[index]
+
+    def __len__(self):
+        return len(self.image_path_list)
+
+
 if __name__ == '__main__':
     import string
     import torch
